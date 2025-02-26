@@ -1,0 +1,8 @@
+streamlit
+flask
+pymongo
+st-star-rating
+streamlit-card
+open-ai
+azure-identity
+langchain-openai
