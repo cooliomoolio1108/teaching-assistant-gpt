@@ -1,0 +1,14 @@
+streamlit
+flask
+pymongo
+st-star-rating
+streamlit-card
+openai
+azure-identity
+langchain-openai
+langchain
+pdfplumber
+pymupdf
+python-dotenv
+flask-cors
+chromadb

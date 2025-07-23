@@ -4,7 +4,6 @@ from utils.chat_functions import save_convo_id, save_message_to_db, get_convo_id
 from utils.styling import inject_custom_css
 from dotenv import load_dotenv
 import os
-import pyperclip
 import time
 
 load_dotenv()
