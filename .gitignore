@@ -1,0 +1,54 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*.ipynb_checkpoints/
+
+# Virtual environments
+.env/
+.venv/
+myEnv/
+
+# Environment variable files
+.env
+
+# Jupyter Notebook checkpoints and outputs
+*.ipynb_checkpoints/
+*.ipynb~  # in case you make temp notebook saves
+
+# Frontend build artifacts (optional if using npm/yarn)
+node_modules/
+dist/
+build/
+*.log
+
+# VS Code settings
+.vscode/
+*.code-workspace
+
+# OS/system files
+.DS_Store
+Thumbs.db
+
+# Python dependency management
+pip-log.txt
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+
+# Compiled C extensions
+*.so
+
+# Logs and temp
+*.log
+*.tmp
+*.bak
+
+# Streamlit generated cache
+.streamlit/
+
+# Ignore large local DB or vector store if regenerated
+backend/chroma_db_data/
+
+# Ignore user-created test or backup scripts
+slideChunking copy.ipynb
