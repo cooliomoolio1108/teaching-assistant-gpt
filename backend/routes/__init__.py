@@ -5,6 +5,7 @@ from .conversation import conversation_routes
 from .message import message_routes
 from .embed import embed_routes
 from .chat import chat_routes
+from .course import course_routes
 
 # Create a Blueprint for all routes
 api_routes = Blueprint("api", __name__)
@@ -16,3 +17,4 @@ api_routes.register_blueprint(conversation_routes)
 api_routes.register_blueprint(message_routes)
 api_routes.register_blueprint(embed_routes)
 api_routes.register_blueprint(chat_routes)
+api_routes.register_blueprint(course_routes)

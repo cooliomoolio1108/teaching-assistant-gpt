@@ -14,3 +14,6 @@ flask-cors
 chromadb
 pypdf
 langchain-community
+pydantic
+pydantic[email]
+pandas

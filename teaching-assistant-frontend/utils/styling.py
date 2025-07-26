@@ -9,6 +9,12 @@ def inject_custom_css():
         font-size: 1.5rem;
         font-weight: 600;
     }
+    section[data-testid="stSidebar"] [data-testid="stHeading"] {
+        padding-left: 5px;
+    }
+    [data-testid="stPageLink-NavLink"] {
+        border: 1px solid rgba(250, 250, 250, 0.2);
+    }
     div[data-testid="stSidebarHeader"] > img, div[data-testid="collapsedControl"] > img {
         height: 10rem;
         width: auto;

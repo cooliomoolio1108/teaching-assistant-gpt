@@ -9,7 +9,8 @@ __pycache__/
 myEnv/
 
 # Environment variable files
-.env
+backend/.env
+teaching-assistant-frontend/.env
 
 # Jupyter Notebook checkpoints and outputs
 *.ipynb_checkpoints/
