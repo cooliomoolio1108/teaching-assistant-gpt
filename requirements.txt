@@ -12,3 +12,5 @@ pymupdf
 python-dotenv
 flask-cors
 chromadb
+pypdf
+langchain-community

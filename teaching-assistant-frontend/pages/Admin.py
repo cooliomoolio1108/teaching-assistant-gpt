@@ -1,30 +1,28 @@
 import streamlit as st
-import requests
-import os
-from dotenv import load_dotenv
-
 from utils.styling import inject_custom_css
-
-load_dotenv()
-API_URL = os.getenv("FLASK_API_URL") + "/embed"
-
+from components.admin import ManageCourses, ManageUsers
 inject_custom_css()
-st.title("Admin Page")
-st.subheader("Manage your Courses")
 
-uploaded_files = st.file_uploader(
-    "Choose files", accept_multiple_files=True
-)
+st.set_page_config(page_title="Admin Panel", layout="wide")
+st.title("Admin Dashboard")
 
-if uploaded_files:
-    with st.spinner("Uploading and processing..."):
-        # Prepare multipart-encoded file data
-        files = [("files", (f.name, f, "application/pdf")) for f in uploaded_files]
+if "admin_view" not in st.session_state:
+    st.session_state.admin_view = "Home"
 
-        response = requests.post(API_URL, files=files)
+with st.sidebar:
+    st.header("Admin Functions")
+    if st.button("Manage Courses"):
+        st.session_state.admin_view = "ManageCourses"
+    if st.button("Manage Users"):
+        st.session_state.admin_view = "ManageUsers"
+    if st.button("View Reports"):
+        st.session_state.admin_view = "Reports"
+    if st.button("↩"):
+        st.session_state.admin_view = "Home"
 
-        if response.status_code == 201:
-            res = response.json()
-            st.success(f"Processed {res['total_files']} files, {res['total_chunks']} chunks embedded.")
-        else:
-            st.error(f"Upload failed: {response.text}")
+view = st.session_state.admin_view
+
+if view == "ManageCourses":
+    ManageCourses.render()
+elif view == "ManageUsers":
+    ManageUsers.render()

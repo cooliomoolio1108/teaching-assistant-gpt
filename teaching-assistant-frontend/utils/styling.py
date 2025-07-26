@@ -61,7 +61,7 @@ def inject_custom_css():
         background: rgb(24 29 155);
         border: 1px solid rgb(24 29 155);
     }
-    [data-testid="stBaseButton-secondary"] {
+    section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"] {
         text-align: left;
         transition: all 0.4s ease;  /* slower and smooth */
         background: rgb(0, 0, 0, 0);
@@ -72,26 +72,32 @@ def inject_custom_css():
         box-sizing: border-box;       /* include padding in width */
         display: flex;                /* required to align text with justify-content */
     }
-    [data-testid="stBaseButton-secondary"]:hover {
+    section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:hover {
         color: white !important;
         background: rgba(24, 29, 155, 0.6);
         border: 1px solid rgb(24 29 155);
         
     }
-    [data-testid="stBaseButton-secondary"]:active {
+    section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:active {
         color: white !important;
         background: rgba(24, 29, 155, 0.6);
         border: 1px solid rgb(24 29 155);
     }
-    data-testid="stBaseButton-secondary"]:focus {
+    section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:focus {
         color: white !important;
         background: rgba(24, 29, 155, 0.8);
         border: 1px solid rgb(24 29 155);
     }
-    [data-testid="stBaseButton-secondary"] button:hover {
+    section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"] button:hover {
         color: white !important;
         background: rgba(24, 29, 155, 0.8);
         border: 1px solid rgb(24 29 155);
+    }
+    [data-testid="stFileUploaderDropzone"] {
+        display: flex;
+    }
+    [data-testid="stFileUploaderDropzoneInstructions"] {
+        display: flex;
     }
     iframe {
         border: none;
