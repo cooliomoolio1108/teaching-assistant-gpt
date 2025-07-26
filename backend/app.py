@@ -2,7 +2,6 @@ from flask import Flask
 from flask_cors import CORS
 from routes import api_routes
 from services.openai_service import get_openai_response
-
 app = Flask(__name__)
 CORS(app)
 
@@ -19,5 +18,5 @@ def test_gpt_connection():
         print("❌ GPT connection failed:", str(e))
 
 if __name__ == "__main__":
-    test_gpt_connection()  # Run test BEFORE starting the app
+    # test_gpt_connection()  # Run test BEFORE starting the app
     app.run(debug=True, host="0.0.0.0", port=5000)

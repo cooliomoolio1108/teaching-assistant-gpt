@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from database.user_crud import get_user, create_user, get_users
+from models.user import User
 
 user_routes = Blueprint("user", __name__)
 
@@ -18,7 +19,15 @@ def add_user():
 
 @user_routes.route("/users", methods=["GET"])
 def fetch_all_users():
+    users = []
     data = get_users()
     if data:
-        return jsonify(data)
+        for u in data:
+            print("This is U: ", u)
+            try:
+                users.append(User(**u).dict())
+                print("This is users:", users)
+            except Exception as e:
+                continue
+        return jsonify(users)
     return jsonify({"message": "No Users"})

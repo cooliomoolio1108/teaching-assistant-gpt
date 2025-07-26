@@ -9,7 +9,7 @@ import time
 load_dotenv()
 API_URL = os.getenv("FLASK_API_URL") + "/conversation"
 inject_custom_css()
-
+st.set_page_config(page_title="Chat Panel", layout="wide")
 if "feedback_given" not in st.session_state:
     st.session_state.feedback_given = False
 
@@ -75,7 +75,7 @@ if st.session_state.current_conversation:
     print(convo_data)
 
     # Display conversation title
-    st.write(f"### 🧠 {convo_data.get('title', 'Untitled Conversation')}")
+    st.write(f"# 🧠 {convo_data.get('title', 'Untitled Conversation')}")
 
     # Display message history
     # Inside main chat display loop
