@@ -53,3 +53,5 @@ backend/chroma_db_data/
 
 # Ignore user-created test or backup scripts
 slideChunking copy.ipynb
+backend/.env
+vector_store/chroma_db_data
