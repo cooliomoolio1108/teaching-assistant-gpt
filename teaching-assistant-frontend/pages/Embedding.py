@@ -1,0 +1,42 @@
+import streamlit as st
+import requests
+import os
+from datetime import datetime
+from dotenv import load_dotenv
+from utils.styling import inject_custom_css
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+DOCUMENTS_DIR = os.path.join(BASE_DIR, "backend", "documents")
+os.makedirs(DOCUMENTS_DIR, exist_ok=True)
+
+load_dotenv()
+API_URL = os.getenv("FLASK_API_URL") + "/embed"
+
+if "upload_done" not in st.session_state:
+    st.session_state.upload_done = False
+
+inject_custom_css()
+st.title("Embedding Page")
+st.subheader("Manage your Courses")
+
+if not st.session_state.upload_done:
+    with st.container():
+        uploaded_files = st.file_uploader(
+            "Choose files", accept_multiple_files=True
+        )
+
+    if uploaded_files:
+        st.write(f"Detected {len(uploaded_files)} file(s).")
+        with st.spinner("Uploading and processing..."):
+            for uploaded_file in uploaded_files:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                file_path = os.path.join(DOCUMENTS_DIR, f"{timestamp}_{uploaded_file.name}")
+
+                with open(file_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                st.success(f"✅ {uploaded_file.name} uploaded.")
+                # files = [("files", (f.name, f, "application/pdf")) for f in uploaded_files]
+else:
+    st.info("✅ Documents successfully uploaded and processed.")
+    if st.button("Upload more"):
+        st.session_state.upload_done = False
