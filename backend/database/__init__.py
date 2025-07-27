@@ -1,6 +1,8 @@
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+from typing import List, Type
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -14,6 +16,7 @@ conversation_collection =  db["conversation"]
 message_collection = db["message"]
 chat_collection = db['chat']
 course_collection = db['course']
+file_collection = db['file']
 
 def check_connection():
     try:
@@ -22,6 +25,24 @@ def check_connection():
     except Exception as e:
         return {"status": "Error", "message": str(e)}
     
-def serialize_user(user_doc):
-    user_doc["_id"] = str(user_doc["_id"])
-    return user_doc
+def serialize_id(doc):
+    doc["_id"] = str(doc["_id"])
+    return doc
+
+def clean_data(data: List[dict], Model: Type[BaseModel]) -> List[dict]:
+    datalist = []
+
+    if len(data) == 1:
+        u = data[0]
+        try:
+            datalist.append(Model(**u).dict())
+        except Exception as e:
+            print("Skipping due to error:", e)
+    else:
+        for u in data:
+            try:
+                datalist.append(Model(**u).dict())
+            except Exception as e:
+                print("Skipping due to error:", e)
+    
+    return datalist

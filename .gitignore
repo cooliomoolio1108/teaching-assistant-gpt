@@ -1,10 +1,10 @@
 # Python cache and compiled files
-__pycache__/
+*__pycache__/
 *.py[cod]
 *.ipynb_checkpoints/
 
 # Virtual environments
-.env/
+*.env
 .venv/
 myEnv/
 
@@ -52,7 +52,7 @@ pip-log.txt
 backend/chroma_db_data/
 
 # Ignore user-created test or backup scripts
-slideChunking copy.ipynb
+backend/slideChunking copy.ipynb
 backend/.env
 backend/vector_store/chroma_db_data
-backend/documents
+*documents/
