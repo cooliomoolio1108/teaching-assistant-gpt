@@ -72,5 +72,5 @@ if st.session_state.view == "main":
 elif st.session_state.view == "chosen":
     view = st.session_state.course_details
     CourseDetails.render(str(view))
-    EmbeddingPopUp()
+    EmbeddingPopUp(str(view))
     File_Display()

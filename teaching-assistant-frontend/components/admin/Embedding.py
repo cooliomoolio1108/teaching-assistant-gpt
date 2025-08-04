@@ -3,56 +3,80 @@ import requests
 import os
 import pandas as pd
 from datetime import datetime
+import time
 from dotenv import load_dotenv
 from utils.styling import inject_custom_css
-from utils.admin_functions import get_files
+from utils.admin_functions import get_files, is_safe_folder_name, get_course, upload_files
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 DOCUMENTS_DIR = os.path.join(BASE_DIR, "backend", "documents")
 os.makedirs(DOCUMENTS_DIR, exist_ok=True)
 
 load_dotenv()
-API_URL = os.getenv("FLASK_API_URL") + "/embed"
+API_URL = os.getenv("FLASK_API_URL") + "/files"
 
 if "upload_done" not in st.session_state:
     st.session_state.upload_done = False
 
 inject_custom_css()
-def EmbeddingPopUp():
+def EmbeddingPopUp(course_id):
+    if st.session_state.courses:
+        courses = st.session_state.courses
+        course = next((item for item in courses if item.get("id") == course_id), None)
+        course_name = course["course_name"]
+    if is_safe_folder_name(course_id):
+        NEW_DOCUMENTS_DIR = os.path.join(DOCUMENTS_DIR, f'{course_id}')
+        os.makedirs(NEW_DOCUMENTS_DIR, exist_ok=True)
     st.write(f'### Files')
-    params = st.query_params
+    params = dict(st.query_params)
+    course_id = params.get("course_id")
     print("PARAMS: ", params)
     if not st.session_state.upload_done:
         with st.container():
             uploaded_files = st.file_uploader(
-                "Choose files", accept_multiple_files=True
+                f'Upload Files for {course_name}', accept_multiple_files=True
             )
-
         if uploaded_files:
             st.write(f"Detected {len(uploaded_files)} file(s).")
             with st.spinner("Uploading and processing..."):
                 for uploaded_file in uploaded_files:
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    file_path = os.path.join(DOCUMENTS_DIR, f"{timestamp}_{uploaded_file.name}")
-
-                    with open(file_path, "wb") as f:
-                        f.write(uploaded_file.getbuffer())
-                    st.success(f"✅ {uploaded_file.name} uploaded.")
+                    files = {
+                        "file": (uploaded_file.name, uploaded_file, "application/pdf"),
+                        "course_id": course_id
+                    }
+                    data = {
+                        "file_name": uploaded_file.name,
+                        "path": "/test",
+                        "uploaded_by": st.session_state.get("username", "unknown"),
+                        "course_id": course_id,
+                        "file_size": uploaded_file.size
+                    }
+                    try:
+                        response = upload_files(data, files)
+                    except Exception as e:
+                        st.error(f'Error saving meta data for {uploaded_file.name}: {e}')
                     # files = [("files", (f.name, f, "application/pdf")) for f in uploaded_files]
+                    st.success(f"✅ {uploaded_file.name} uploaded.")
+            time.sleep(3)
+            st.session_state.upload_done = True
+            st.rerun()
     else:
         st.info("✅ Documents successfully uploaded and processed.")
         if st.button("Upload more"):
             st.session_state.upload_done = False
+            st.rerun()
 
 def File_Display():
-    files = get_files()
+    params = dict(st.query_params)
+    course_id = params.get("course_id")
+    files = get_files(course_id)
     df = pd.DataFrame(files)
-
+    print(df)
     # Sidebar filtering (optional)
-    st.sidebar.header("Filters")
-    uploader_filter = st.sidebar.selectbox("Uploaded by", ["All"] + sorted(df["uploaded_by"].unique().tolist()))
-    if uploader_filter != "All":
-        df = df[df["uploaded_by"] == uploader_filter]
+    # st.sidebar.header("Filters")
+    # uploader_filter = st.sidebar.selectbox("Uploaded by", ["All"] + sorted(df["uploaded_by"].unique().tolist()))
+    # if uploader_filter != "All":
+    #     df = df[df["uploaded_by"] == uploader_filter]
 
     # Show as table with action buttons
     for i, row in df.iterrows():
