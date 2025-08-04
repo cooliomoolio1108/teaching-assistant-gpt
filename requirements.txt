@@ -17,3 +17,5 @@ langchain-community
 pydantic
 pydantic[email]
 pandas
+langchain-chroma>=0.1.2
+google-cloud-storage

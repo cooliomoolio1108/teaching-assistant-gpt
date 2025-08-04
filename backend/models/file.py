@@ -5,7 +5,7 @@ from datetime import datetime
 class File(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
     file_name: str = Field(..., min_length=1, max_length=100)
-    path: str = Field(..., min_length=1, max_length=300)
+    path: Optional[str] = Field(..., min_length=1, max_length=300)
     course_id: str = Field(..., min_length=1, max_length=100)
     
     uploaded_by: Optional[str] = None

@@ -39,7 +39,6 @@ if st.session_state.view == "main":
         st.subheader("Manage your Courses")
 
         params = st.query_params
-        print("PARAMS: ", params)
         if not st.session_state.upload_done:
             with st.container():
                 uploaded_files = st.file_uploader(
