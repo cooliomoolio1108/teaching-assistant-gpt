@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 from utils.chat_functions import save_convo_id, save_message_to_db, get_convo_id, get_messages, send_to_gpt, simulate_streaming_from_response, feedback_in_chat, generate_title
+from utils.admin_functions import get_all_courses
 from utils.styling import inject_custom_css
 from dotenv import load_dotenv
 import os
@@ -10,8 +11,46 @@ load_dotenv()
 API_URL = os.getenv("FLASK_API_URL") + "/conversation"
 inject_custom_css()
 st.set_page_config(page_title="Chat Panel", layout="wide")
+
+if "courses" not in st.session_state:
+    try:
+        data = get_all_courses()
+        st.session_state.courses = data
+    except Exception as e:
+        st.session_state.courses = []
+        st.error(e)
+    
+
+@st.dialog("Creating Conversation")
+def create_convo():
+    options = st.session_state.courses
+    if options and isinstance(options, (list, set, tuple)):
+        course_options = {
+            f"{option['course_name']}": option['id']  # Display title, store code
+            for option in options
+        }
+        option = st.selectbox(
+            "Choose a course for this conversation",
+            course_options.keys(),
+        )
+        if option and st.button("submit", type="primary"):
+            st.session_state.create_new_convo = True
+            title = "New Chat"
+            new_convo_id = save_convo_id(title, "user", course_options[option])
+            if new_convo_id:
+                st.session_state.conversations[new_convo_id] = {
+                    "title": title,
+                    "messages": [],
+                    "title_updated": False
+                }
+                st.session_state.current_conversation = new_convo_id
+
+
 if "feedback_given" not in st.session_state:
     st.session_state.feedback_given = False
+
+if "create_new_convo" not in st.session_state:
+    st.session_state.create_new_convo = False
 
 # Initialize session state
 if "conversations" not in st.session_state:
@@ -46,15 +85,17 @@ with st.sidebar:
     st.header("Conversations")
 
     if st.button("New Conversation", type="primary"):
-        title = "New Chat"
-        new_convo_id = save_convo_id(title, "user")
-        if new_convo_id:
-            st.session_state.conversations[new_convo_id] = {
-                "title": title,
-                "messages": [],
-                "title_updated": False
-            }
-            st.session_state.current_conversation = new_convo_id
+        create_convo()
+        # st.session_state.create_new_convo = True
+        # title = "New Chat"
+        # new_convo_id = save_convo_id(title, "user")
+        # if new_convo_id:
+        #     st.session_state.conversations[new_convo_id] = {
+        #         "title": title,
+        #         "messages": [],
+        #         "title_updated": False
+        #     }
+        #     st.session_state.current_conversation = new_convo_id
 
 
     for convo_id, convo_data in st.session_state.conversations.items():

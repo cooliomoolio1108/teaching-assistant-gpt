@@ -4,6 +4,7 @@ import requests
 import os
 from dotenv import load_dotenv
 import time
+from datetime import datetime
 
 load_dotenv()
 MSG_API_URL = os.getenv("FLASK_API_URL") + "/message"
@@ -25,8 +26,8 @@ def save_message_to_db(conversation_id, role, content):
         daemon=True  # makes sure thread ends when app closes
     ).start()
 
-def save_convo_id(title, role):
-    payload = {"title": title, "user_id": role, "title_updated": False}
+def save_convo_id(title, role, course_code):
+    payload = {"title": title, "user_id": role, "title_updated": False, "course_code":course_code}
     res = requests.post(CONVO_API_URL, json=payload)
     
     if res.status_code == 201:

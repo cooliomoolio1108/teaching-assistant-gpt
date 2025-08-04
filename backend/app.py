@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from routes import api_routes
 from services.openai_service import get_openai_response
+from services.chromadb_service import vector_store
 app = Flask(__name__)
 CORS(app)
 
@@ -19,4 +20,5 @@ def test_gpt_connection():
 
 if __name__ == "__main__":
     # test_gpt_connection()  # Run test BEFORE starting the app
+    vector_db = vector_store
     app.run(debug=True, host="0.0.0.0", port=5000)
