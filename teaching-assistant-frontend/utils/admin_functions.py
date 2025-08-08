@@ -117,11 +117,11 @@ def upload_files(data, files):
         print(f"[ERROR] Failed to connect to backend: {e}")
         return None
 
-def embed_files(file_ids):
-    response = requests.post(EMBED_API_URL, json=file_ids)
-    print("response.status_code", response.status_code)
-    if response.status_code in (200, 201):
-        return response.json().get("status")
+def embed_files(file_id):
+    print('Admin:', file_id)
+    response = requests.post(EMBED_API_URL, json={"file_ids": file_id})
+    if response.status_code == 200:
+        return response.json()  # You can handle result content
     else:
-        print(f"[ERROR] API returned {response.status_code}: {response.text}")
+        print(f"[ERROR] API returned {response.status_code}")
         return None

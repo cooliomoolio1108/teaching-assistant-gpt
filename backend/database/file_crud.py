@@ -50,23 +50,30 @@ def save_files_to_db(data):
     
 def embed_single_file(file_doc):
     if not file_doc:
-        return {'Error': 'Error'}
+        return {"status": "Not Embedded", "reason": "Missing file document"}
+
     file_path = file_doc["path"]
     file_id = str(file_doc["_id"])
 
     loader = PyMuPDFLoader(file_path)
     raw_documents = loader.load()
 
+    if not raw_documents or all(doc.page_content.strip() == "" for doc in raw_documents):
+        return {"status": "Not Embedded", "reason": "Empty or unreadable content"}
+
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
     chunks = splitter.split_documents(raw_documents)
+
     if not chunks:
-        raise ValueError("❌ No content to embed from document")
+        return {"status": "Not Embedded", "reason": "No chunks detected"}
+
     for chunk in chunks:
         chunk.metadata["file_id"] = file_id
         chunk.metadata["file_name"] = file_doc["file_name"]
         chunk.metadata["course_id"] = file_doc["course_id"]
-    
+
     doc_ids = vector_store.add_documents(chunks)
+
     file_collection.update_one(
         {"_id": ObjectId(file_doc["_id"])},
         {
@@ -77,5 +84,6 @@ def embed_single_file(file_doc):
             }
         }
     )
+
     print("The collection is length:", vector_store._collection.count())
     return {"status": "embedded", "doc_count": len(doc_ids)}
