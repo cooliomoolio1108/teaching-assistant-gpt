@@ -21,4 +21,4 @@ def test_gpt_connection():
 if __name__ == "__main__":
     # test_gpt_connection()  # Run test BEFORE starting the app
     vector_db = vector_store
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="localhost", port=5000)

@@ -56,9 +56,32 @@ def receive_file():
 
 @file_routes.route("/embed", methods=["POST"])
 def embed_file():
-    file_ids = request.json.get("file_ids", [])
-    for file_id in file_ids:
-        file_doc = get_file_by_id(file_id)
-        if file_doc and not file_doc.get("embedded"):
-            embed_single_file(file_doc)
-    return jsonify({"status": "embedding complete"})
+    file_ids = request.json.get("file_ids", '')
+    embedded_files = []
+    failed_files = []
+
+    file_doc = get_file_by_id(file_ids)
+    if file_doc and not file_doc.get("embedded"):
+        try:
+            result = embed_single_file(file_doc)
+            if result.get("status") == "embedded":
+                embedded_files.append({
+                    "file_id": file_ids,
+                    "doc_count": result.get("doc_count", 0)
+                })
+            else:
+                failed_files.append({
+                    "file_id": file_ids,
+                    "reason": result.get("reason", "Unknown")
+                })
+        except Exception as e:
+            failed_files.append({
+                "file_id": file_ids,
+                "reason": str(e)
+            })
+
+    return jsonify({
+        "status": "embedding complete",
+        "embedded_files": embedded_files,
+        "failed_files": failed_files
+    })

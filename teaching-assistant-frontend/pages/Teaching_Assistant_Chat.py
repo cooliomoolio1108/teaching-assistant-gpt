@@ -44,6 +44,7 @@ def create_convo():
                     "title_updated": False
                 }
                 st.session_state.current_conversation = new_convo_id
+            st.rerun()
 
 
 if "feedback_given" not in st.session_state:
@@ -58,17 +59,16 @@ if "conversations" not in st.session_state:
         response = requests.get(API_URL)
         response.raise_for_status()
         conversations = response.json()
-        print("CONVERSATIONS: ", conversations)
         # Store as a dictionary: {title: []}
         st.session_state.conversations = {
             convo["_id"]: {
                 "title": convo["title"],
                 "messages": [],
-                "title_updated": convo["title"] != "New Chat" 
+                "title_updated": convo["title"] != "New Chat",
+                "course_id": convo.get('course_code', '')
             }
             for convo in conversations
         }
-        print("HERE",st.session_state.conversations)
     except Exception as e:
         st.session_state.conversations = {}
         st.error(f"Failed to load conversations: {str(e)}")
@@ -107,13 +107,11 @@ with st.sidebar:
 # Main Chat Window
 if st.session_state.current_conversation:
     convo_id = st.session_state.current_conversation
-    print(f"Active conversation: {convo_id}")
 
     # Load message history from backend
     messages = get_messages(convo_id)
     st.session_state.conversations[convo_id]["messages"] = messages
     convo_data = st.session_state.conversations[convo_id]
-    print(convo_data)
 
     # Display conversation title
     st.write(f"# 🧠 {convo_data.get('title', 'Untitled Conversation')}")
@@ -159,13 +157,11 @@ if st.session_state.current_conversation:
         assistant_msg = {"role": "assistant", "content": reply}
         st.session_state.conversations[convo_id]["messages"].append(assistant_msg)
         if (st.session_state.conversations[convo_id]["title"] == "New Chat"
-            and len(st.session_state.conversations[convo_id]["messages"]) >= 2
+            and len(st.session_state.conversations[convo_id]["messages"]) >= 4
             and not st.session_state.conversations[convo_id].get("title_updated", False)):
                 new_title = generate_title(convo_id)
-                print("THE NEW TITLE IS ", new_title)
                 if new_title:
                     st.session_state.conversations[convo_id]["title"] = new_title['title']
-                    print("SEARCG+H", st.session_state.conversations[convo_id]["title"])
                     st.session_state.conversations[convo_id]["title_updated"] = True
         
 else:

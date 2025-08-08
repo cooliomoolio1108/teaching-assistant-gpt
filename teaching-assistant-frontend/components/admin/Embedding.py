@@ -113,15 +113,21 @@ def File_Display():
                     st.write(f"**Embedded:** {'✅' if row['embedded'] else '❌'}")
                 with col4:
                     if st.button("📄 Embed", key=f"embed_{i}"):
-                        json = {"file_ids": [row['id']]}
-                        success = embed_files(json)
-                        if success:
-                            st.success("✅ Embedding successful!")
+                        file_id = row['id']
+                        print('File IDs', file_id)
+                        reply = embed_files(file_id)
+                        if reply:
+                            fail = reply.get('failed_files')
+                            if fail:
+                                fail = fail[0]
+                                reason = fail.get('reason')
+                                st.warning(reason)
+                            else:
+                                st.success("✅ Embedding successful!")
                             st.session_state.embedding_done = True
                             time.sleep(2)
                             st.rerun()
                         else:
-                            print(success)
                             st.error("❌ Failed to embed")
                 with col5:
                     if st.button("🗑️ Delete", key=f"delete_{i}"):
