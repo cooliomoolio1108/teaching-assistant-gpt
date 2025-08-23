@@ -1,7 +1,7 @@
 import streamlit as st
 from components.admin import CourseDetails
 
-def render(datalist: list, embed: callable):
+def render(datalist: list):
     if isinstance(datalist, list):
         for data in datalist:
             if isinstance(data, dict):

@@ -2,10 +2,12 @@ import streamlit as st
 from utils.admin_functions import get_all_users
 import pandas as pd
 from utils.styling import inject_custom_css
-
-inject_custom_css()
+from utils.auth import require_login
 
 st.set_page_config(page_title="Users Panel", layout="wide")
+require_login()
+inject_custom_css()
+
 if "users" not in st.session_state:
     users = get_all_users()
     print(users)
@@ -20,7 +22,7 @@ def role_color(role):
 
 st.subheader("👥 User Directory")
 columns_map = {
-    'username': 'Username',
+    'name': 'Username',
     'email': 'Email',
     'role': 'Role',
     'is_active':'Active Status',

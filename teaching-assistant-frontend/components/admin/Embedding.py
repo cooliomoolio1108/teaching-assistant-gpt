@@ -1,23 +1,22 @@
 import streamlit as st
-import requests
 import os
 import pandas as pd
 from datetime import datetime
 import time
 from dotenv import load_dotenv
 from utils.styling import inject_custom_css
-from utils.admin_functions import get_files, is_safe_folder_name, get_course, upload_files, embed_files
-from streamlit_pdf_viewer import pdf_viewer
-from . import filePreview
+from utils.admin_functions import get_files, upload_files, embed_files
+# from streamlit_pdf_viewer import pdf_viewer
+# from . import filePreview
 
 load_dotenv()
-API_URL = os.getenv("FLASK_API_URL") + "/files"
+inject_custom_css()
 
 if "upload_done" not in st.session_state:
     st.session_state.upload_done = False
 if "embedding_done" not in st.session_state:
     st.session_state.embedding_done = False
-inject_custom_css()
+
 def EmbeddingPopUp(course_id):
     if st.session_state.courses:
         courses = st.session_state.courses

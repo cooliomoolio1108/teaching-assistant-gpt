@@ -16,11 +16,24 @@ USER_API_URL = os.getenv("FLASK_API_URL") + "/users"
 COURSE_API_URL = os.getenv("FLASK_API_URL") + "/courses"
 FILE_API_URL = os.getenv("FLASK_API_URL") + "/files"
 EMBED_API_URL = os.getenv("FLASK_API_URL") + "/embed"
+PRMPT_API_URL = os.getenv("FLASK_API_URL") + "/prompt"
 
 def get_all_users():
     try:
         response = requests.get(USER_API_URL)
         response.raise_for_status()  # raises HTTPError if status != 2xx
+        return response.json()
+    except requests.exceptions.HTTPError as http_err:
+        st.error(f"❌ HTTP error: {http_err}")
+    except requests.exceptions.RequestException as req_err:
+        st.error(f"❌ Request failed: {req_err}")
+    except Exception as e:
+        st.error(f"❌ Unexpected error: {e}")
+
+def get_user(oid):
+    try:
+        url = USER_API_URL + f'/{str(oid)}'
+        response = requests.get(url)
         return response.json()
     except requests.exceptions.HTTPError as http_err:
         st.error(f"❌ HTTP error: {http_err}")
@@ -124,4 +137,13 @@ def embed_files(file_id):
         return response.json()  # You can handle result content
     else:
         print(f"[ERROR] API returned {response.status_code}")
+        return None
+
+def get_prompts():
+    try:
+        r = requests.get(PRMPT_API_URL, timeout=5)
+        r.raise_for_status()
+        return r.json()  # always return JSON if no exception
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching prompts: {e}")
         return None

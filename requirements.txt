@@ -19,3 +19,9 @@ pydantic[email]
 pandas
 langchain-chroma>=0.1.2
 google-cloud-storage
+msal
+Authlib
+streamlit-cookies-manager
+streamlit-js-eval
+langgraph
+st-cookie>=1.0

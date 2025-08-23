@@ -15,6 +15,24 @@ def inject_custom_css():
     [data-testid="stPageLink-NavLink"] {
         border: 1px solid rgba(250, 250, 250, 0.2);
     }
+    [data-testid="stPopoverBody"] {
+        max-width: 50% !important;   /* adjust width */
+        padding: 8px !important;   /* optional: reduce padding */
+    }
+    [data-testid="stPopoverButton"] {
+        border: 0px;
+        background: rgb(0, 0, 0, 0);
+    }
+    [data-testid="stPopoverBody"] [class*="st-key-delete_"] [data-testid="stButton"] button {
+        border: none !important;
+        background: rgb(0, 0, 0, 0);
+        color: red;
+    }
+    [data-testid="stPopoverBody"] [data-testid="stButton"] button {
+        border: none !important;
+        background: rgb(0, 0, 0, 0);
+        color: #818589;
+    }
     div[data-testid="stSidebarHeader"] > img, div[data-testid="collapsedControl"] > img {
         height: 10rem;
         width: auto;
