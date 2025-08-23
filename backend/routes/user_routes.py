@@ -4,9 +4,9 @@ from models.user import User
 
 user_routes = Blueprint("user", __name__)
 
-@user_routes.route("/users/<user_id>", methods=["GET"])
-def fetch_user(user_id):
-    user = get_user(user_id)
+@user_routes.route("/users/<oid>", methods=["GET"])
+def fetch_user(oid):
+    user = get_user(oid)
     if user:
         return jsonify(user)
     return jsonify({"message": "User not found"}), 404

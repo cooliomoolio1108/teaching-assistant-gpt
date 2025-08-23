@@ -5,6 +5,8 @@ import os
 from dotenv import load_dotenv
 import time
 from datetime import datetime
+from bson import ObjectId
+from .auth import create_jwt
 
 load_dotenv()
 MSG_API_URL = os.getenv("FLASK_API_URL") + "/message"
@@ -13,21 +15,19 @@ GPT_API_URL = os.getenv("FLASK_API_URL") + "/chat"
 FDBK_API_URL = os.getenv("FLASK_API_URL") + "/feedback"
 TITLE_API_URL = os.getenv("FLASK_API_URL") + "/generate_title"
 
-def save_message_to_db(conversation_id, role, content):
+def save_message_to_db(conversation_id, role, prompt):
     payload = {
         "conversation_id": conversation_id,
         "role": role,
-        "content": content,
+        "content": prompt,
     }
-    threading.Thread(
-        target=requests.post,
-        args=(MSG_API_URL,),
-        kwargs={"json": payload},
-        daemon=True  # makes sure thread ends when app closes
-    ).start()
+    response = requests.post(MSG_API_URL, json=payload)
+    response.raise_for_status()  # optional: raise if not 2xx
+    return response
 
-def save_convo_id(title, role, course_code):
-    payload = {"title": title, "user_id": role, "title_updated": False, "course_code":course_code}
+
+def save_convo_id(title, user_id, course_code):
+    payload = {"title": title, "user_id": user_id, "title_updated": False, "course_code":course_code}
     res = requests.post(CONVO_API_URL, json=payload)
     
     if res.status_code == 201:
@@ -48,16 +48,21 @@ def get_convo_id():
         return []
     
 
-def send_to_gpt(conversation_id) -> str:
+def send_to_gpt(conversation_id, prompt, course_id, course_title) -> str:
     try:
         response = requests.post(GPT_API_URL, json={
             "conversation_id": conversation_id,
+            "prompt": prompt,
+            "course_id": course_id,
+            "course_title": course_title
         })
         response.raise_for_status()
-        return response.json().get("response", "⚠️ No reply")
+        resp_json = response.json()
+        return resp_json
     except requests.RequestException as e:
         return f"❌ Error contacting backend: {str(e)}"
-    
+
+
 def get_messages(convo_id):
     getUrl = MSG_API_URL + f'/{convo_id}'
     response = requests.get(getUrl)
@@ -102,3 +107,20 @@ def generate_title(convo_id):
         return response.json()
     except Exception as e:
         st.error(f"❌ Failed to send information to generate title: {e}")
+
+def delete_conversation(convo_id):
+    deletion_url = CONVO_API_URL + f'/{convo_id}'
+    try:
+        response = requests.delete(deletion_url)
+        response.raise_for_status()
+        st.success('Successfully Deleted')
+        return response.json()
+    except Exception as e:
+        st.error(f'Error deleting Conversation {convo_id}: {e}')
+
+def source_formatter(sourcelist):
+    tokens = []
+    for d in sourcelist or []:
+        if "source" in d and "page" in d:
+            tokens.append(create_jwt({"source": d["source"], "page": d["page"]}))
+    return tokens

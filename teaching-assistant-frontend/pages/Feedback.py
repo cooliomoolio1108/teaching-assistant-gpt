@@ -4,7 +4,8 @@ import os
 import requests
 from dotenv import load_dotenv
 from utils.styling import inject_custom_css
-
+from utils.auth import require_login
+require_login()
 load_dotenv()
 API_URL = os.getenv("FLASK_API_URL") + "/feedback"
 

@@ -1,8 +1,11 @@
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
-from typing import List, Type
+from typing import Type, Dict
 from pydantic import BaseModel
+from datetime import datetime
+from pymongo.collection import Collection
+from pymongo.errors import PyMongoError
 
 load_dotenv()
 
@@ -17,6 +20,7 @@ message_collection = db["message"]
 chat_collection = db['chat']
 course_collection = db['course']
 file_collection = db['file']
+prompt_collection = db['prompt']
 
 def check_connection():
     try:
@@ -29,20 +33,37 @@ def serialize_id(doc):
     doc["_id"] = str(doc["_id"])
     return doc
 
-def clean_data(data: List[dict], Model: Type[BaseModel]) -> List[dict]:
-    datalist = []
+def clean_data(data: Dict, Model: Type[BaseModel]) -> Dict:
+    """Validate a single dict against a Pydantic model."""
+    try:
+        return Model(**data).dict()
+    except Exception as e:
+        print("Skipping due to error:", e)
+        return {}
 
-    if len(data) == 1:
-        u = data[0]
-        try:
-            datalist.append(Model(**u).dict())
-        except Exception as e:
-            print("Skipping due to error:", e)
-    else:
-        for u in data:
-            try:
-                datalist.append(Model(**u).dict())
-            except Exception as e:
-                print("Skipping due to error:", e)
-    
-    return datalist
+def receive_one(db_collection: Collection, data: dict):
+    try:
+        if "timestamp" not in data:
+            data["timestamp"] = datetime.utcnow()
+        print("db collection:", db_collection)
+        print("data:", data)
+        # cleaned_data = clean_data(data)
+
+        result = db_collection.insert_one(data)
+
+        if result.acknowledged:
+            return {
+                "status": "success",
+                "data": {"inserted_id": str(result.inserted_id)}
+            }
+        else:
+            return {
+                "status": "fail",
+                "data": {"reason": "Insert not acknowledged"}
+            }
+    except PyMongoError as e:
+        return {
+            "status": "error",
+            "message": "Database insert failed",
+            "data": {"error": str(e)}
+        }

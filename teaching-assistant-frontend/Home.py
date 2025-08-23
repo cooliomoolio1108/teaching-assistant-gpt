@@ -1,33 +1,53 @@
 import streamlit as st
-from components.module_card import show_card
-import os
-import requests
-from dotenv import load_dotenv
-import base64
+from utils.auth import decode_jwt, bootstrap_and_persist
+from utils.admin_functions import get_user
 from utils.styling import inject_custom_css
+from dotenv import load_dotenv
+from utils.debug import debug_session_state
+import st_cookie
 
-load_dotenv()
-API_URL = os.getenv("FLASK_API_URL") + "/status"
-response = requests.get(API_URL)
-
-with open("assets/Machine-Learning.jpg", "rb") as f:
-    data1 = f.read()
-    encoded1 = base64.b64encode(data1)
-data1 = "data:image/png;base64," + encoded1.decode("utf-8")
-
-with open("assets/bgimg.jpg", "rb") as f:
-    data2 = f.read()
-    encoded2 = base64.b64encode(data2)
-data2 = "data:image/png;base64," + encoded2.decode("utf-8")
-
-st.logo("assets/chatbot.png", size="large")
 inject_custom_css()
-st.title("Home Page")
-st.subheader("Your Courses")
+st.set_page_config(page_title="Home", layout="wide")
+bootstrap_and_persist()
+load_dotenv()
 
+@st.dialog("⚠ Login Required")
+def show_login_warning():
+    st.write("You are about to log in via NTU SSO. Continue?")
+    col1, col2 = st.columns([1,1])
 
-col1, col2 = st.columns(2, gap="medium")
-with col1:
-    show_card(data1, "SC4172", "This course is about...", "card1")
-with col2:
-    show_card(data2, "SC3000", "This Course is about...", "card2")
+    with col1:
+        if st.button("✅ Yes, log me in"):
+            # Redirect to backend SSO
+            st.markdown(
+                f"<meta http-equiv='refresh' content='0; url={BACKEND_BASE}'>",
+                unsafe_allow_html=True
+            )
+
+    with col2:
+        if st.button("❌ Cancel"):
+            st.rerun()
+BACKEND_BASE = "http://localhost:5000/login"
+if st.session_state.get("logged_in"):
+    oid = st.session_state['user']['oid'] or ''
+    user = get_user(oid)
+    st.session_state['user']['role'] = user['role'] or 'nil'
+    st.markdown(
+        f"# Welcome, <span style='color:green'>{st.session_state["user"]['name']}</span>",
+        unsafe_allow_html=True
+    )
+else:
+    st.spinner("Checking Login Status")
+    if st.button("Login via NTU SSO"):
+        show_login_warning()
+    st.spinner("Checking Login Status")
+
+st_cookie.apply()
+
+st.checkbox(
+    "enabled",
+    key="my_checkbox",
+    on_change=lambda: st_cookie.update("login_token"),
+)
+
+debug_session_state()

@@ -36,3 +36,15 @@ def edit_title(convo_id, new_title):
     except Exception as e:
         print(f"❌ Error updating title: {e}")
         return False
+    
+def delete_convo(convo_id):
+    try:
+        result = conversation_collection.delete_one({
+            "_id": ObjectId(str(convo_id))
+        })
+        if result.deleted_count:
+            return True
+        return False
+    except Exception as e:
+        print('Exception:', e)
+        return False

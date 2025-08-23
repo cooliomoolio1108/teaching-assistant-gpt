@@ -58,3 +58,4 @@ backend/vector_store/chroma_db_data
 *documents/
 backend/chroma_langchain_db
 backend/test.ipynb
+backend/rag/chroma_langchain_db
