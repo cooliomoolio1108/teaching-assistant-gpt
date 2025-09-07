@@ -18,6 +18,7 @@ def get_conversation():
 
 @conversation_routes.route("/generate_title", methods=["POST"])
 def generate_title():
+    print("generatea")
     data = request.get_json()
     convo_id = data.get("conversation_id")
 

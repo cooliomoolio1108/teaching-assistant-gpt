@@ -10,7 +10,8 @@ class Config:
     SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
     MONGO_URI = os.getenv("MONGO_URI")
     AUTHORITY = "https://login.microsoftonline.com/common"
-    REDIRECT_PATH = "/getAuth"
+    REDIRECT_PATH = "auth/getAuth"
     SCOPE = ["User.Read"]
     FRONTEND_URL = os.getenv("STREAMLIT_URL")
     JWT_SECRET = os.getenv("JWT_SECRET")
+    CALLBACK_URL = os.getenv("CALLBACK")

@@ -2,10 +2,13 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 from typing import Type, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from datetime import datetime
 from pymongo.collection import Collection
 from pymongo.errors import PyMongoError
+from bson import ObjectId
+from bson.errors import InvalidId
+from typing import List, Type
 
 load_dotenv()
 
@@ -30,23 +33,22 @@ def check_connection():
         return {"status": "Error", "message": str(e)}
     
 def serialize_id(doc):
+    if not doc:
+        return None
     doc["_id"] = str(doc["_id"])
     return doc
 
 def clean_data(data: Dict, Model: Type[BaseModel]) -> Dict:
     """Validate a single dict against a Pydantic model."""
     try:
-        return Model(**data).dict()
+        return Model(**data).dict(by_alias=True)
     except Exception as e:
-        print("Skipping due to error:", e)
         return {}
 
 def receive_one(db_collection: Collection, data: dict):
     try:
         if "timestamp" not in data:
             data["timestamp"] = datetime.utcnow()
-        print("db collection:", db_collection)
-        print("data:", data)
         # cleaned_data = clean_data(data)
 
         result = db_collection.insert_one(data)
@@ -67,3 +69,4 @@ def receive_one(db_collection: Collection, data: dict):
             "message": "Database insert failed",
             "data": {"error": str(e)}
         }
+

@@ -1,5 +1,4 @@
 import streamlit as st
-import requests
 from utils.chat_functions import (
     save_convo_id,
     save_message_to_db,
@@ -16,31 +15,34 @@ from utils.admin_functions import get_all_courses, get_course
 from utils.styling import inject_custom_css
 from dotenv import load_dotenv
 from utils.auth import require_login
-from utils.debug import debug_session_state
-from urllib.parse import urlencode, quote
-from components.admin import filePreview
+from components import message_toolbar, sidebar_menu
 import time
 import re
-import os
-
-def convert_to_latex(text):
-    # Only replace math-looking content inside parentheses
-    text = re.sub(r"\\\[(.+?)\\\]", r"$$\1$$", text, flags=re.DOTALL)
-    return text
-
-def stream_message(text):
-    print("THISS IS TEXT:", text)
-    placeholder = st.empty()
-    accumulated = ""
-    for chunk in text.split(" "):
-        accumulated += chunk + " "
-        placeholder.markdown(convert_to_latex(accumulated))
-        time.sleep(0.05)  # simulate streaming
 
 st.set_page_config(page_title="Chat Panel", layout="wide")
 inject_custom_css()
 require_login()
 load_dotenv()
+sidebar_menu.authenticated_menu()
+
+def convert_to_latex(text: str) -> str:
+    # Convert block equations \[...\] → $$...$$
+    text = re.sub(r"\\\[(.+?)\\\]", r"$$\1$$", text, flags=re.DOTALL)
+    # Convert inline equations \(...\) → $...$
+    text = re.sub(r"\\\((.+?)\\\)", r"$\1$", text, flags=re.DOTALL)
+    return text
+
+def stream_message(text, mode):
+    placeholder = st.empty()
+    accumulated = ""
+    for chunk in text.split(" "):
+        if mode == 'new':
+            accumulated += chunk + " "
+            placeholder.markdown(convert_to_latex(accumulated), unsafe_allow_html=True)
+            time.sleep(0.01)  # simulate streaming
+        else:
+            accumulated += chunk + " "
+            placeholder.markdown(convert_to_latex(accumulated), unsafe_allow_html=True)
 
 if "courses" not in st.session_state:
     try:
@@ -78,12 +80,6 @@ def create_convo():
                 st.session_state.current_conversation = new_convo_id
             st.rerun()
 
-@st.dialog("View Source", width='large')
-def show_files():
-    # link = os.getenv("STREAMLIT_URL") + '/View_Files'
-    # st.link_button(label="click", url=link)
-    filePreview.render()
-
 if "feedback_given" not in st.session_state:
     st.session_state.feedback_given = False
 
@@ -116,15 +112,14 @@ if st.session_state.current_conversation is None:
 
 # Sidebar: Manage Conversations
 with st.sidebar:
-    st.header("Conversations")
-
+    st.title("Conversations")
     if st.button("New Conversation", type="primary"):
         create_convo()
     for convo_id, convo_data in st.session_state.conversations.items():
         col1, col2 = st.columns([7,1])
         label = convo_data.get("title", "Untitled")
         with col1:
-            if st.button(label, key=convo_id):
+            if st.button(label, key=convo_id, width='stretch'):
                 st.session_state.current_conversation = convo_id
                 # Force one fetch on next render:
                 st.session_state.conversations[convo_id]["messages"] = None
@@ -135,10 +130,9 @@ with st.sidebar:
             clearCache = popover.button("Clear Cache", key=f'clearCache_{convo_id}')
             if deletion:
                 deletion_result = delete_conversation(convo_id)
-                print("Result of Deleting:", deletion_result)
                 st.rerun()
             if clearCache:
-                st.warning("Cache Clearing simulation")
+                st.rerun()
 
 
 # Main Chat Window
@@ -154,13 +148,9 @@ if st.session_state.current_conversation:
     if convo_data["messages"] is None:
         # Fetch once because cache is empty
         messages = get_messages(convo_id)
-        print("CHECKING MESG:", messages)
         st.session_state.conversations[convo_id]["messages"] = messages
     else:
-        # Reuse the in-memory copy
         messages = convo_data["messages"]
-        print("HERE ARE THE MESSAGES:", messages)
-
 
     # Display conversation title
     st.write(f"# 🧠 {convo_data.get('title', 'Untitled Conversation')}")
@@ -169,15 +159,17 @@ if st.session_state.current_conversation:
     # Display message history
     # Inside main chat display loop
     for idx, msg in enumerate(messages):
-        print("MSG:", msg)
         with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+            # st.markdown(msg["content"])
+            stream_message(msg['content'], 'old')
             if msg.get("sources"):
                 sourceslist = msg.get("sources", "")
                 paramlist = source_formatter(sourceslist)
                 st.session_state.paramlist = paramlist
-                if st.button("source", key=f'viewfile_{idx}'):
-                    show_files()
+                # if st.button("sources", key=f'viewfile_{idx}'):
+                #     show_files()
+            if msg["role"] == 'assistant':
+                message_toolbar.render(idx)
         last_msg_count = idx
             # st.markdown(msg.get("sources", ""))
 
@@ -201,32 +193,30 @@ if st.session_state.current_conversation:
         # TODO: Add GPT response handler here (send to backend, display, and save)
         with st.spinner("Thinking..."):
             response = send_to_gpt(convo_id, prompt, course_id, course_title)
-        print("This is response: ", response)
         answer = response.get('answer', '')
         source = response.get('sources', '')
-        print("Sources:", source)
         assistant_msg = {"role": "assistant", "content": answer, "sources": source}
         st.session_state.conversations[convo_id]["messages"].append(assistant_msg)
         with st.chat_message("assistant"):
-            stream_message(answer)
-            # st.write_stream(simulate_streaming_from_response('',answer))
-            paramlist = source_formatter(source)
-            st.session_state.paramlist = paramlist
-            if st.button("sources", key=f'viewfile_{last_msg_count + 1}'):
-                show_files()
+            stream_message(answer, 'new')
+            # paramlist = source_formatter(source)
+            # st.session_state.paramlist = paramlist
+            # if st.button("sources", key=f'viewfile_{last_msg_count + 1}'):
+            #     show_files()
 
         # if not st.session_state.feedback_given:
         #     if messages and messages[-1]["role"] == "assistant":
         #         if st.button("👍", key=f"thumbs_up_last"):
         #             st.session_state.feedback_given = True
         #             feedback_in_chat(5)
-        
         if (st.session_state.conversations[convo_id]["title"] == "New Chat"
             and len(st.session_state.conversations[convo_id]["messages"]) >= 4
             and not st.session_state.conversations[convo_id].get("title_updated", False)):
+                st.write("Changing Titles")
                 new_title = generate_title(convo_id)
                 if isinstance(new_title, dict):
                     st.session_state.conversations[convo_id]["title"] = new_title.get("title", "")
+        st.rerun()
 else:
     st.warning("Please start a new conversation or access you past conversations in the sidebar.")
 

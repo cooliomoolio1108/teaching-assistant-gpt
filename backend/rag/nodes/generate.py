@@ -78,26 +78,17 @@ llm_stream = AzureChatOpenAI(
 )
 
 def generate(state: State):
-    print("getting prompt")
     prompt = get_prompt(state['course_id'])
-    print("Prompt:", prompt)
     COURSE_SCOPED_PROMPT = build_course_scoped_prompt(prompt)
-    print("COURSE_SCOPED_PROMPT:", COURSE_SCOPED_PROMPT)
-    # docs_content = "\n\n".join(doc.page_content for doc in state["context"])
     hist_text = "\n".join(f"{m.get('role','user')}: {m.get('content','')}" for m in state['history'])
     messages = COURSE_SCOPED_PROMPT.invoke({"history": hist_text, "question": state["question"], "context": state['context'], "course_title": state['course_title']})
-    print("Combined message:", messages)
-    print("=== PROMPT SENT TO AZURE ===")
-    for m in messages:
-        print("Message: ", m)
+    print("============================")
+    print("Sending to GPT:", messages)
     print("============================")
     response = llm_stream.invoke(messages)
-    print("This is response:", response)
     formatted_answer = wrap_source_link(
         response.content,
         base_url="https://my-backend.com"
     )
     sources = state.get("sources")
-    print("State: " ,state)
-    print(sources)
     return {"answer": formatted_answer, "sources": state.get("sources", "")}

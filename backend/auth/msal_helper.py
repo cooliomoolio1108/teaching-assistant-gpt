@@ -1,6 +1,6 @@
 import msal
 from flask import current_app, url_for
-import jwt, time
+from functools import wraps
 from datetime import datetime, timezone
 
 def build_msal_app():
@@ -17,24 +17,7 @@ def get_auth_url(state):
         redirect_uri=url_for("auth.authorized", _external=True)
     )
 
-def create_jwt(user_email, name, oid):
-    payload = {
-        "oid": oid,
-        "email": user_email,
-        "name": name,
-        "iat": int(time.time()),
-        "exp": int(time.time()) + 3600  # expires in 1 hour
-    }
-    token = jwt.encode(payload, current_app.config["JWT_SECRET"], algorithm="HS256")
-    return token
-
 def upsert_user_from_claims(db, claims: dict) -> dict:
-    """
-    Idempotent provisioning:
-      1) Lookup by oid (primary key for SSO)
-      2) If not found, try by email (legacy)
-      3) Create new user if still not found
-    """
     oid   = claims.get("oid")
     email = (claims.get("preferred_username") or claims.get("email") or "").lower()
     name  = claims.get("name") or ""
@@ -60,7 +43,6 @@ def upsert_user_from_claims(db, claims: dict) -> dict:
             }}
         )
         u.update({"email": email, "name": name, "tenant_id": tid, "last_login": now})
-        print("Updated OID: ", u)
         return u
 
     # 2) Fallback by email (legacy accounts before oid was stored)
@@ -77,7 +59,6 @@ def upsert_user_from_claims(db, claims: dict) -> dict:
             }}
         )
         u.update({"oid": oid, "tenant_id": tid, "last_login": now})
-        print("Updated Email: ", u)
         return u
 
     # 3) Create new
@@ -93,6 +74,5 @@ def upsert_user_from_claims(db, claims: dict) -> dict:
         "last_login": now
     }
     res = db.insert_one(doc)
-    print("Updated New: ", res)
     doc["_id"] = str(res.inserted_id)
     return doc

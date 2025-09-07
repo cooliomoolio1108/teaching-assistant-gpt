@@ -113,10 +113,9 @@ def delete_conversation(convo_id):
     try:
         response = requests.delete(deletion_url)
         response.raise_for_status()
-        st.success('Successfully Deleted')
         return response.json()
     except Exception as e:
-        st.error(f'Error deleting Conversation {convo_id}: {e}')
+        st.error(f'❌')
 
 def source_formatter(sourcelist):
     tokens = []

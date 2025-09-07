@@ -1,5 +1,3 @@
-# routes/__init__.py
-
 from .auth import auth_bp
 from .main import main_bp
 from .user_routes import user_routes
@@ -20,17 +18,3 @@ def register_routes(app):
     app.register_blueprint(chat_routes)
     app.register_blueprint(course_routes)
     app.register_blueprint(file_routes)
-
-def jsend_success(data):
-    return {"status": "success", "data": data}
-
-def jsend_fail(data):
-    return {"status": "fail", "data": data}
-
-def jsend_error(message, code=None, data=None):
-    resp = {"status": "error", "message": message}
-    if code is not None:
-        resp["code"] = code
-    if data is not None:
-        resp["data"] = data
-    return resp

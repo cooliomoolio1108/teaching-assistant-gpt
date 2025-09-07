@@ -2,7 +2,6 @@ import streamlit as st
 from streamlit_pdf_viewer import pdf_viewer
 from utils.auth import decode_jwt
 
-
 def render():
     if st.session_state.paramlist:
         paramlist = st.session_state.paramlist

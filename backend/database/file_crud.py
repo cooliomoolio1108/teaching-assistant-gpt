@@ -6,26 +6,24 @@ import os
 from bson import ObjectId
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings  # or other
-from langchain_chroma import Chroma
 from rag.services.chroma_service import vector_store
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 DOCUMENTS_DIR = os.path.join(BASE_DIR, "backend", "documents")
 os.makedirs(DOCUMENTS_DIR, exist_ok=True)
 
-def get_files():
+def find_files():
     files = file_collection.find()
-    return [serialize_id(file) for file in files]
+    return [serialize_id(f) for f in files]
 
-def get_files_by_course(course_id: str):
+def find_files_by_course(course_id: str):
     results = list(file_collection.find({"course_id": course_id}))
     cleaned = [serialize_id(file) for file in results]
     return cleaned
 
-def get_file_by_id(id):
+def find_file_by_id(id):
     file_doc = file_collection.find_one({"_id": ObjectId(id)})
-    return file_doc
+    return serialize_id(file_doc)
 
 def save_files_to_db(data):
     def process(doc):
@@ -54,7 +52,6 @@ def embed_single_file(file_doc):
 
     file_path = file_doc["path"]
     file_id = str(file_doc["_id"])
-
     loader = PyMuPDFLoader(file_path)
     raw_documents = loader.load()
 
@@ -73,7 +70,6 @@ def embed_single_file(file_doc):
         chunk.metadata["course_id"] = file_doc["course_id"]
 
     doc_ids = vector_store.add_documents(chunks)
-
     file_collection.update_one(
         {"_id": ObjectId(file_doc["_id"])},
         {
@@ -87,3 +83,24 @@ def embed_single_file(file_doc):
 
     print("The collection is length:", vector_store._collection.count())
     return {"status": "embedded", "doc_count": len(doc_ids)}
+
+def delete_embed(file_id):
+    filtering = {"file_id": file_id}
+    results = vector_store.get(where=filtering)
+    ids_to_delete = results["ids"]
+    if ids_to_delete:
+        vector_store.delete(ids=ids_to_delete)
+    return len(ids_to_delete)
+
+def find_embed_by_course(course_id):
+    return
+
+def find_embeds():
+    chroma_collection = vector_store._collection
+    all_data = chroma_collection.get(include=['documents', 'embeddings', 'metadatas'])
+    print(all_data)
+    return all_data
+
+def delete_file_by_id(id):
+    delete_result = file_collection.delete_one({"_id": ObjectId(id)})
+    return delete_result.deleted_count

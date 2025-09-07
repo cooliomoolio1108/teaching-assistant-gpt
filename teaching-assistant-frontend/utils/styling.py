@@ -9,11 +9,16 @@ def inject_custom_css():
         font-size: 1.5rem;
         font-weight: 600;
     }
+    [data-testid="stTab"] {
+        font-size:50px
+    }
     section[data-testid="stSidebar"] [data-testid="stHeading"] {
-        padding-left: 5px;
+        padding-left: 10px;
     }
     [data-testid="stPageLink-NavLink"] {
-        border: 1px solid rgba(250, 250, 250, 0.2);
+        border-left: 1px solid rgba(250, 250, 250, 0.2);
+        border-bottom: 1px solid rgba(250, 250, 250, 0.2);
+        
     }
     [data-testid="stPopoverBody"] {
         max-width: 50% !important;   /* adjust width */
@@ -34,9 +39,11 @@ def inject_custom_css():
         color: #818589;
     }
     div[data-testid="stSidebarHeader"] > img, div[data-testid="collapsedControl"] > img {
-        height: 10rem;
+        display: flex;
+        justify-content: center;  /* center horizontally */
+        align-items: center;
+        height: 8rem;
         width: auto;
-        padding-top: 2rem;
     }
     div[data-testid="stSidebarContent"] {
         padding-top: 2rem;
@@ -49,26 +56,26 @@ def inject_custom_css():
     [data-testid="stSidebarNavItems"] {
         padding-top: 2rem;
     }
-    [data-testid="stSidebar"] {
-        display: flex;
-        
-    }
+    # [data-testid="stSidebar"] {
+    #     display: flex;
+    # }
     [data-testid="stVerticalBlock"] {
-        gap: 1rem;
+        gap: 0.6rem;
     }
     [data-testid="stHeader"] {
         background: rgb(0, 0, 0, 0);
     }
 
     [data-testid="stBaseButton-primary"] {
-        background: rgb(0, 0, 0, 0);
+        background: rgb(255, 255, 255, 1);
         border: 1px solid rgba(255, 255, 255, 1);
         transition: all 0.4s ease; /* slower and smooth */
-        
+        color: rgb(0, 0, 0, 1);
     }
     [data-testid="stBaseButton-primary"]:hover {
         background: rgb(24 29 155);
         border: 1px solid rgb(24 29 155);
+        color: rgb(255, 255, 255, 1);
     }
     data-testid="stBaseButton-primary"]:active {
         color: white !important;
@@ -92,31 +99,32 @@ def inject_custom_css():
         border: 0;
         padding: 0.2rem !important;  /* override inline style */
         justify-content: flex-start;  /* align text left */
-        width: 100% !important;       /* make full-width */
+        width: inherit !important;       /* make full-width */
         box-sizing: border-box;       /* include padding in width */
         display: flex;                /* required to align text with justify-content */
     }
     section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:hover {
-        color: white !important;
-        background: rgba(24, 29, 155, 0.6);
-        border: 1px solid rgb(24 29 155);
-        
+        color: back !important;
+        background: rgba(0, 0, 0, 0.2);
+        border: 0px solid rgb(24 29 155);
+        width: inherit;
     }
-    section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:active {
-        color: white !important;
-        background: rgba(24, 29, 155, 0.6);
-        border: 1px solid rgb(24 29 155);
-    }
-    section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:focus {
-        color: white !important;
-        background: rgba(24, 29, 155, 0.8);
-        border: 1px solid rgb(24 29 155);
-    }
-    section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"] button:hover {
-        color: white !important;
-        background: rgba(24, 29, 155, 0.8);
-        border: 1px solid rgb(24 29 155);
-    }
+    # section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:active {
+    #     color: white !important;
+    #     background: rgba(24, 29, 155, 0.6);a
+    #     border: 1px solid rgb(24 29 155);
+    # }
+    # section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:focus {
+    #     color: white !important;
+    #     background: rgba(24, 29, 155, 0.8);
+    #     border: 1px solid rgb(24 29 155);
+    #     width: inherit;
+    # }
+    # section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"] button:hover {
+    #     color: white !important;
+    #     background: rgba(24, 29, 155, 0.8);
+    #     border: 1px solid rgb(24 29 155);
+    # }
     [data-testid="stFileUploaderDropzone"] {
         display: flex;
     }
@@ -132,4 +140,4 @@ def inject_custom_css():
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
-    st.logo("assets/chatbot.png", size="large")
+    st.logo("assets/chatbot.png", size='large')

@@ -8,7 +8,7 @@ from rag.services.chroma_service import vector_store
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    CORS(app)  # Enable CORS for all routes
+    CORS(app, supports_credentials=True)  # Enable CORS for all routes
 
     register_routes(app)  # Registers all blueprints (flat)
 
@@ -17,4 +17,4 @@ def create_app():
 if __name__ == "__main__":
     vector_db = vector_store  # If you need it early
     app = create_app()
-    app.run(debug=True, host="localhost", port=5000)
+    app.run(debug=True, host="localhost", port=5050)

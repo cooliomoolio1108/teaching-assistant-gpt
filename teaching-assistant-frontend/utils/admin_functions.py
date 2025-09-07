@@ -5,6 +5,9 @@ import os
 from dotenv import load_dotenv
 import time
 import re
+from components import toast
+from components.refresh_login import refresh_login
+from utils.auth import header, handle_token_expiry, render_global_components
 
 load_dotenv()
 MSG_API_URL = os.getenv("FLASK_API_URL") + "/message"
@@ -15,14 +18,57 @@ TITLE_API_URL = os.getenv("FLASK_API_URL") + "/generate_title"
 USER_API_URL = os.getenv("FLASK_API_URL") + "/users"
 COURSE_API_URL = os.getenv("FLASK_API_URL") + "/courses"
 FILE_API_URL = os.getenv("FLASK_API_URL") + "/files"
-EMBED_API_URL = os.getenv("FLASK_API_URL") + "/embed"
+EMBED_API_URL = os.getenv("FLASK_API_URL") + "/files/embed"
 PRMPT_API_URL = os.getenv("FLASK_API_URL") + "/prompt"
 
+def process_json(resp, action: str, by: str = "single"):
+    status_code = resp.status_code
+    try:
+        payload = resp.json()
+    except Exception:
+        return None
+
+    status = payload.get("status")
+    information = payload.get("data") if status == "success" else payload.get("reason", "")
+
+    # --- Success (200 OK) ---
+    if status_code == 200 and status == "success":
+        if action != "nil":
+            toast.render(status, action)
+        return payload.get("data", {} if by == "single" else [])
+
+    # --- Not Found (404) ---
+    elif status_code == 404 and status == "fail":
+        if action != "nil":
+            toast.render(status, "Not Found")
+        return {} if by == "single" else []
+
+    # --- Validation / Client error (400) ---
+    elif status_code == 400 and status == "fail":
+        toast.render(status, information)
+        return {} if by == "single" else []
+
+    # --- Server error (500) ---
+    elif status_code == 500 and status == "error":
+        toast.render(status, information or "Internal Server Error")
+        return None
+
+    # --- Expired token special case ---
+    elif status_code == 401 and information == "Token expired.":
+        toast.render(status, information or "Internal Server Error")
+        return information
+
+    # --- Fallback ---
+    else:
+        toast.render("error", f"Unexpected: {information},{status_code}")
+        return information
+
+
+#cleaned
 def get_all_users():
     try:
         response = requests.get(USER_API_URL)
-        response.raise_for_status()  # raises HTTPError if status != 2xx
-        return response.json()
+        return process_json(response, "nil", "many")
     except requests.exceptions.HTTPError as http_err:
         st.error(f"❌ HTTP error: {http_err}")
     except requests.exceptions.RequestException as req_err:
@@ -30,11 +76,43 @@ def get_all_users():
     except Exception as e:
         st.error(f"❌ Unexpected error: {e}")
 
-def get_user(oid):
+#cleaned
+def add_users(addedusers):
     try:
-        url = USER_API_URL + f'/{str(oid)}'
+        response = requests.post(f"{USER_API_URL}", json=addedusers)
+        return process_json(response, "Add Success")
+
+    except requests.exceptions.HTTPError as http_err:
+        st.error(f"HTTP error: {http_err}")
+    except requests.exceptions.RequestException as req_err:
+        st.error(f"Request failed: {req_err}")
+    except Exception as e:
+        st.error(f"Unexpected error: {e}")
+
+#cleaned
+def delete_user(id):
+    try:
+        response = requests.delete(f"{USER_API_URL}/{id}")
+        return process_json(response, "Delete Success")
+
+    except requests.exceptions.HTTPError as http_err:
+        st.error(f"HTTP error: {http_err}")
+    except requests.exceptions.RequestException as req_err:
+        st.error(f"Request failed: {req_err}")
+    except Exception as e:
+        st.error(f"Unexpected error: {e}")
+
+#cleaned
+def get_user(identifier: str, by: str = "id"):
+    try:
+        if by == "oid":
+            url = f"{USER_API_URL}/oid/{identifier}"
+        else:
+            url = f"{USER_API_URL}/{identifier}"
+
         response = requests.get(url)
-        return response.json()
+        return process_json(response, "nil")
+
     except requests.exceptions.HTTPError as http_err:
         st.error(f"❌ HTTP error: {http_err}")
     except requests.exceptions.RequestException as req_err:
@@ -42,11 +120,25 @@ def get_user(oid):
     except Exception as e:
         st.error(f"❌ Unexpected error: {e}")
 
+#cleaned
+def edit_user(id, edits):
+    try:
+        response = requests.put(f"{USER_API_URL}/{id}", json={"edits": edits})
+        return process_json(response, "User(s) edited")
+
+    except requests.exceptions.HTTPError as http_err:
+        st.error(f"HTTP error: {http_err}")
+    except requests.exceptions.RequestException as req_err:
+        st.error(f"Request failed: {req_err}")
+    except Exception as e:
+        st.error(f"Unexpected error: {e}")
+
+#cleaned
 def get_all_courses():
     try:
         response = requests.get(COURSE_API_URL)
-        response.raise_for_status()
-        return response.json()
+        return process_json(response, "nil", "many")
+    
     except requests.exceptions.HTTPError as http_err:
         st.error(f"❌ HTTP error: {http_err}")
     except requests.exceptions.RequestException as req_err:
@@ -54,18 +146,18 @@ def get_all_courses():
     except Exception as e:
         st.error(f"❌ Unexpected error: {e}")
 
+#cleaned
 def get_course(id):
     try:
         url = COURSE_API_URL + f'/{id}'
         response = requests.get(url)
-        response.raise_for_status()
-        return response.json()
+        return process_json(response, "nil", ",many")
     except requests.exceptions.HTTPError as http_err:
-        st.error(f"❌ HTTP error: {http_err}")
+        st.error(f"HTTP error: {http_err}")
     except requests.exceptions.RequestException as req_err:
-        st.error(f"❌ Request failed: {req_err}")
+        st.error(f"Request failed: {req_err}")
     except Exception as e:
-        st.error(f"❌ Unexpected error: {e}")
+        st.error(f"Unexpected error: {e}")
 
 def get_files(course_id=None):
     try:
@@ -74,71 +166,68 @@ def get_files(course_id=None):
         else:
             response = requests.get(FILE_API_URL)
 
-        response.raise_for_status()
-        return response.json()
+        return process_json(response, "nil", "many")
     
     except requests.exceptions.HTTPError as http_err:
-        try:
-            error_detail = response.json().get("error", "Unknown error")
-        except Exception:
-            error_detail = response.text or "No error detail provided"
-        st.error(f"❌ HTTP error {response.status_code}: {error_detail}")
-    
-    except requests.exceptions.ConnectionError:
-        st.error("❌ Could not connect to the server. Is the backend running?")
-    
+        st.error(f"HTTP error: {http_err}")
+    except requests.exceptions.RequestException as req_err:
+        st.error(f"Request failed: {req_err}")
     except Exception as e:
-        st.error(f"❌ Unexpected error: {e}")
-
-
-
-def is_safe_folder_name(name: str) -> bool:
-    return bool(re.fullmatch(r"[A-Za-z0-9_\-]+", name))
+        st.error(f"Unexpected error: {e}")
 
 def upload_files(data, files):
-    # Validate inputs
-    if not isinstance(data, dict):
-        raise TypeError("Expected input data as a dictionary.")
-    if not isinstance(files, dict):
-        raise TypeError("Expected files to be passed as a dictionary.")
-
-    required_keys = ["file_name", "path", "course_id", "uploaded_by", "file_size"]
-    if not all(k in data for k in required_keys):
-        raise ValueError(f"Missing one of the required fields: {required_keys}")
-
     try:
-        # Prepare form data (metadata)
-        form_data = {
-            "file_name": data["file_name"],
-            "path": data["path"],
-            "course_id": data["course_id"],
-            "uploaded_by": data["uploaded_by"],
-            "file_size": str(data["file_size"]),  # must be string for form field
-            "embedded": "False"
-        }
+        if not data or not isinstance(data, dict):
+            raise ValueError("Missing metadata")
+        if not files or not isinstance(files, dict):
+            raise ValueError("Missing file")
 
-        # Send both file and metadata together
+        form_data = {k: str(v) for k, v in data.items()}
+
         response = requests.post(FILE_API_URL, files=files, data=form_data)
+        response.raise_for_status()  # catch 4xx/5xx
+        jsend = response.json()
 
-        if response.status_code in (200, 201):
-            return response.json().get("_id") or response.json().get("file_id")
+        return process_json(jsend, "Upload Success")
+
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error: {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+    return None
+
+def embed_file(file_id: str):
+    try:
+        headers = header(st.session_state["login_token"])
+        response = requests.post(EMBED_API_URL, json={"file_id": file_id}, headers=headers)
+        return process_json(response, "Files embedded.")
+    except Exception as e:
+        return e
+
+def delete_files(file_id=None, payload=None):
+    try:
+        if file_id:
+            response = requests.delete(f"{FILE_API_URL}/{file_id}")
         else:
-            print(f"[ERROR] API returned {response.status_code}: {response.text}")
-            return None
+            response = requests.delete(FILE_API_URL, json={"delete": payload})
+        return process_json(response, "Deleted")
+    except requests.exceptions.HTTPError as http_err:
+        st.error(f"HTTP error: {http_err}")
+    except requests.exceptions.RequestException as req_err:
+        st.error(f"Request failed: {req_err}")
+    except Exception as e:
+        st.error(f"Unexpected error: {e}")
 
-    except requests.RequestException as e:
-        print(f"[ERROR] Failed to connect to backend: {e}")
+def get_embeds():
+    try:
+        response = requests.get(EMBED_API_URL)
+        return process_json(response, "nil")
+    except Exception as e:
         return None
-
-def embed_files(file_id):
-    print('Admin:', file_id)
-    response = requests.post(EMBED_API_URL, json={"file_ids": file_id})
-    if response.status_code == 200:
-        return response.json()  # You can handle result content
-    else:
-        print(f"[ERROR] API returned {response.status_code}")
-        return None
-
+    
 def get_prompts():
     try:
         r = requests.get(PRMPT_API_URL, timeout=5)
