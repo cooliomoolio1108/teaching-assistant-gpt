@@ -35,7 +35,7 @@ def get_base64_of_bin_file(bin_file: Path) -> str:
         return base64.b64encode(f.read()).decode()
     
 # Path to local image
-img_path = Path("assets/chatbot.png")
+img_path = Path("teaching-assistant-frontend/assets/chatbot.png")
 img_base64 = get_base64_of_bin_file(img_path)
 
 # --- Login Warning Dialog ---
