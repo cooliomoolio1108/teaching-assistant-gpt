@@ -10,16 +10,17 @@ from components.refresh_login import refresh_login
 from utils.auth import header, handle_token_expiry, render_global_components
 
 load_dotenv()
-MSG_API_URL = os.getenv("FLASK_API_URL") + "/message"
-CONVO_API_URL = os.getenv("FLASK_API_URL") + "/conversation"
-GPT_API_URL = os.getenv("FLASK_API_URL") + "/chat"
-FDBK_API_URL = os.getenv("FLASK_API_URL") + "/feedback"
-TITLE_API_URL = os.getenv("FLASK_API_URL") + "/generate_title"
-USER_API_URL = os.getenv("FLASK_API_URL") + "/users"
-COURSE_API_URL = os.getenv("FLASK_API_URL") + "/courses"
-FILE_API_URL = os.getenv("FLASK_API_URL") + "/files"
-EMBED_API_URL = os.getenv("FLASK_API_URL") + "/files/embed"
-PRMPT_API_URL = os.getenv("FLASK_API_URL") + "/prompt"
+url = "http://localhost:5050"
+MSG_API_URL = url + "/message"
+CONVO_API_URL = url + "/conversation"
+GPT_API_URL = url + "/chat"
+FDBK_API_URL = url + "/feedback"
+TITLE_API_URL = url + "/generate_title"
+USER_API_URL = url + "/users"
+COURSE_API_URL = url + "/courses"
+FILE_API_URL = url + "/files"
+EMBED_API_URL = url + "/files/embed"
+PRMPT_API_URL = url + "/prompt"
 
 def process_json(resp, action: str, by: str = "single"):
     status_code = resp.status_code
