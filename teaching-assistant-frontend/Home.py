@@ -46,10 +46,7 @@ def show_login_warning():
 
     with c1:
         if st.button("✅ Yes, log me in"):
-            st.markdown(
-                f"<meta http-equiv='refresh' content='0; url={FLASK_LOGIN}'>",
-                unsafe_allow_html=True,
-            )
+            st.markdown(f"[Click here to login]({st.secrets['FLASK_LOGIN']})", unsafe_allow_html=True)
     with c2:
         if st.button("❌ Cancel"):
             st.rerun()
