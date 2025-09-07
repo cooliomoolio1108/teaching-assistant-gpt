@@ -140,4 +140,4 @@ def inject_custom_css():
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
-    st.logo("assets/chatbot.png", size='large')
+    # st.logo("assets/chatbot.png", size='large')
