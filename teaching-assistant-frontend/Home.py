@@ -46,14 +46,14 @@ def show_login_warning():
 
     with c1:
         if st.button("✅ Yes, log me in"):
-            st.page_link(st.secrets["FLASK_LOGIN"])
+            st.page_link(FLASK_LOGIN)
     with c2:
         if st.button("❌ Cancel"):
             st.rerun()
 
 FLASK_LOGIN = os.getenv("FLASK_LOGIN")
 if not FLASK_LOGIN:
-    st.secrets["FLASK_LOGIN"]
+    FLASK_LOGIN = st.secrets["FLASK_LOGIN"]
 
 # with col2:
 if st.session_state.get("logged_in"):
