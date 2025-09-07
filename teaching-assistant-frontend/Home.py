@@ -55,6 +55,8 @@ def show_login_warning():
             st.rerun()
 
 FLASK_LOGIN = os.getenv("FLASK_LOGIN")
+if not FLASK_LOGIN:
+    st.secrets["FLASK_LOGIN"]
 
 # with col2:
 if st.session_state.get("logged_in"):
