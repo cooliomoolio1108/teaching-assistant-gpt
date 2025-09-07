@@ -8,7 +8,7 @@ def get_base64_of_bin_file(bin_file):
 
 def render():
     # --- Load image and apply CSS with opacity overlay ---
-    img_path = Path("assets/background.png")  # change to your path
+    img_path = Path("teaching-assistant-frontend/assets/background.png")  # change to your path
     img_base64 = get_base64_of_bin_file(img_path)
 
     st.markdown(
