@@ -82,7 +82,7 @@ if st.session_state.get("logged_in"):
 
 
 else:
-    bg_path = Path("assets/4882066.jpg")
+    bg_path = Path("teaching-assistant-frontend/assets/4882066.jpg")
     bg_base64 = get_base64_of_bin_file(bg_path)
     st.markdown(
         """
